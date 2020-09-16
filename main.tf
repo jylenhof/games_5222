@@ -7,7 +7,7 @@ resource "google_compute_instance" "gcelab" {
   machine_type = "n1-standard-2"
   zone         = "us-central1-c"
 
-  tags = ["web"]
+  tags = ["http-server"]
 
   boot_disk {
     initialize_params {
@@ -24,12 +24,7 @@ resource "google_compute_instance" "gcelab" {
     }
   }
 
-  metadata = {
-    foo = "bar"
-  }
-
   metadata_startup_script = "apt update && apt-get install nginx -y"
-  }
 }
 
 resource "google_compute_instance" "gcelab2" {
@@ -50,18 +45,21 @@ resource "google_compute_instance" "gcelab2" {
 
 }
 
+data "google_compute_network" "default" {
+  name = "default"
+}
+
 resource "google_compute_firewall" "default" {
-  name    = "allowhttp"
-  network = google_compute_network.default.name
+  name    = "default-allow-http"
+  network = data.google_compute_network.default.name
 
   allow {
     protocol = "tcp"
     ports    = ["80"]
   }
-
-  source_tags = ["web"]
+  
+  source_ranges = ["0.0.0.0/0"]
+  priority = "65534"
+  target_tags = ["http-server"]
 }
 
-resource "google_compute_network" "default" {
-  name = "default"
-}
